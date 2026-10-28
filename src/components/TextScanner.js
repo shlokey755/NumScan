@@ -2,18 +2,20 @@ import TextRecognition from '@react-native-ml-kit/text-recognition';
 import * as Clipboard from 'expo-clipboard';
 import { useIsFocused } from 'expo-router';
 import { useRef, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import ActionButton from './ActionButton';
-import ResultCard from './ResultCard';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import Button from './Button';
+import ResultPanel from './ResultPanel';
 import ScanCamera from './ScanCamera';
+import ScreenHeader, { IconButton } from './ScreenHeader';
+import { colors } from '../theme';
 import { extractDigitGroups, getTextInsideBox } from '../lib/text';
 
-// The scan box. Only text whose centre is inside it is read.
+// The scan area. Only text whose centre is inside it is read.
 const FRAME_WIDTH = 260;
 const FRAME_HEIGHT = 120;
 
-// Shared by the text and number screens. Nothing is read until "Capture" is tapped.
-export default function TextScanner({ mode }) {
+// Shared by the text and number screens. Nothing is read until Capture is tapped.
+export default function TextScanner({ title, mode }) {
   const isNumber = mode === 'number';
   const isFocused = useIsFocused();
   const cameraRef = useRef(null);
@@ -23,8 +25,8 @@ export default function TextScanner({ mode }) {
   const [message, setMessage] = useState(null);
 
   const hint = isNumber
-    ? 'Line up the number inside the box, then tap Capture.'
-    : 'Line up the text inside the box, then tap Capture.';
+    ? 'Put the number inside the box, then tap Capture.'
+    : 'Put the text inside the box, then tap Capture.';
 
   const capture = async () => {
     if (!cameraRef.current || busy) return;
@@ -39,7 +41,6 @@ export default function TextScanner({ mode }) {
       const inside = lines.join('\n');
 
       if (!inside.trim()) {
-        setResult(null);
         setMessage(
           (ocr?.text ?? '').trim()
             ? 'Text found, but not inside the box. Move it into the box.'
@@ -51,7 +52,6 @@ export default function TextScanner({ mode }) {
       if (isNumber) {
         const groups = extractDigitGroups(inside);
         if (groups.length === 0) {
-          setResult(null);
           setMessage('No numbers found inside the box.');
           return;
         }
@@ -61,17 +61,30 @@ export default function TextScanner({ mode }) {
       }
     } catch (error) {
       console.error('Scanning Error:', error);
-      setResult(null);
       setMessage('Something went wrong while scanning. Try again.');
     } finally {
       setBusy(false);
     }
   };
 
-  const clearResult = () => setResult(null);
+  const clearResult = () => {
+    setResult(null);
+    setMessage(null);
+  };
 
   return (
     <View style={styles.screen}>
+      <ScreenHeader
+        title={title}
+        right={
+          <IconButton
+            name={torch ? 'flash' : 'flash-off-outline'}
+            label={torch ? 'Turn torch off' : 'Turn torch on'}
+            onPress={() => setTorch((on) => !on)}
+          />
+        }
+      />
+
       <View style={styles.stage}>
         <ScanCamera
           cameraRef={cameraRef}
@@ -83,81 +96,83 @@ export default function TextScanner({ mode }) {
         <Text style={styles.hint}>{hint}</Text>
       </View>
 
-      <View style={styles.panel}>
+      <View style={styles.footer}>
         {result && !isNumber ? (
-          <ResultCard
+          <ResultPanel
             key={result.id}
-            title="Text"
+            label="Text"
             text={result.text}
-            copyLabel="Copy text"
-            dismissLabel="Clear"
+            dismissLabel="Capture again"
             onDismiss={clearResult}
           />
         ) : null}
 
         {result && isNumber ? (
-          <ResultCard
+          <ResultPanel
             key={result.id}
-            title="Numbers"
+            label="Numbers"
             text={result.groups.join('')}
             copyLabel="Copy all"
-            dismissLabel="Clear"
+            dismissLabel="Capture again"
             onDismiss={clearResult}
           >
             <Text style={styles.subtle}>Tap a number to copy only that one.</Text>
-            <View style={styles.chips}>
+            <View style={styles.tiles}>
               {result.groups.map((group, index) => (
-                <NumberChip key={`${result.id}-${index}`} value={group} />
+                <NumberTile key={`${result.id}-${index}`} value={group} />
               ))}
             </View>
-          </ResultCard>
+          </ResultPanel>
         ) : null}
 
-        {message ? <Text style={styles.message}>{message}</Text> : null}
-
-        <View style={styles.row}>
-          <ActionButton
-            label={torch ? 'Torch off' : 'Torch on'}
-            onPress={() => setTorch((on) => !on)}
-          />
-          <ActionButton
-            label="Capture"
-            primary
-            loading={busy}
-            disabled={!isFocused}
-            onPress={capture}
-          />
-        </View>
+        {!result ? (
+          <>
+            {message ? <Text style={styles.message}>{message}</Text> : null}
+            <Button
+              label="Capture"
+              icon="camera-outline"
+              variant="solid"
+              onPress={capture}
+              loading={busy}
+              disabled={!isFocused}
+            />
+          </>
+        ) : null}
       </View>
     </View>
   );
 }
 
-function NumberChip({ value }) {
+function NumberTile({ value }) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
-    await Clipboard.setStringAsync(value);
-    setCopied(true);
+    try {
+      await Clipboard.setStringAsync(value);
+      setCopied(true);
+    } catch (error) {
+      Alert.alert('Copy failed', String(error?.message ?? error));
+    }
   };
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={copy}
-      activeOpacity={0.8}
-      style={[styles.chip, copied && styles.chipCopied]}
+      style={({ pressed }) => [
+        styles.tile,
+        copied && styles.tileCopied,
+        pressed && styles.tilePressed,
+      ]}
     >
-      <Text style={[styles.chipText, copied && styles.chipTextCopied]}>
-        {copied ? `${value} copied` : value}
-      </Text>
-    </TouchableOpacity>
+      <Text style={[styles.tileText, copied && styles.tileTextCopied]}>{value}</Text>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.bg,
   },
   stage: {
     flex: 1,
@@ -166,52 +181,55 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   hint: {
-    color: '#ccc',
+    color: colors.muted,
     fontSize: 15,
     textAlign: 'center',
-    marginTop: 18,
+    marginTop: 20,
   },
-  panel: {
-    padding: 16,
-    paddingBottom: 32,
-    gap: 12,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+  footer: {
+    minHeight: 170,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 20,
+    paddingBottom: 28,
     gap: 12,
   },
   message: {
-    color: '#ffb347',
+    color: colors.muted,
     fontSize: 14,
     textAlign: 'center',
+    marginBottom: 4,
   },
   subtle: {
-    color: '#888',
+    color: colors.muted,
     fontSize: 13,
   },
-  chips: {
+  tiles: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
-  chip: {
-    backgroundColor: '#1c1c1c',
-    borderWidth: 1,
-    borderColor: '#00FF66',
-    borderRadius: 16,
+  tile: {
+    minWidth: 64,
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.line,
   },
-  chipCopied: {
-    backgroundColor: '#00FF66',
+  tileCopied: {
+    backgroundColor: colors.text,
+    borderColor: colors.text,
   },
-  chipText: {
-    color: '#00FF66',
-    fontSize: 16,
+  tilePressed: {
+    opacity: 0.6,
+  },
+  tileText: {
+    color: colors.text,
+    fontSize: 17,
     fontWeight: '600',
+    fontVariant: ['tabular-nums'],
   },
-  chipTextCopied: {
-    color: '#000',
+  tileTextCopied: {
+    color: colors.inverse,
   },
 });

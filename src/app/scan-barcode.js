@@ -15,8 +15,9 @@ const BARCODE_TYPES = [
 
 export default function ScanBarcodeScreen() {
   return (
-    <PermissionGate>
+    <PermissionGate title="Barcode">
       <CodeScanner
+        title="Barcode"
         barcodeTypes={BARCODE_TYPES}
         frameWidth={280}
         frameHeight={140}
