@@ -3,6 +3,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useIsFocused } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from './Button';
 import ResultPanel from './ResultPanel';
 import ScanCamera from './ScanCamera';
@@ -18,6 +19,7 @@ const FRAME_HEIGHT = 120;
 export default function TextScanner({ title, mode }) {
   const isNumber = mode === 'number';
   const isFocused = useIsFocused();
+  const insets = useSafeAreaInsets();
   const cameraRef = useRef(null);
   const [torch, setTorch] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -96,7 +98,7 @@ export default function TextScanner({ title, mode }) {
         <Text style={styles.hint}>{hint}</Text>
       </View>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 32 }]}>
         {result && !isNumber ? (
           <ResultPanel
             key={result.id}
