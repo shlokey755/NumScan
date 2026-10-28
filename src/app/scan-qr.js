@@ -5,8 +5,9 @@ const QR_TYPES = ['qr'];
 
 export default function ScanQrScreen() {
   return (
-    <PermissionGate>
+    <PermissionGate title="QR code">
       <CodeScanner
+        title="QR code"
         barcodeTypes={QR_TYPES}
         frameWidth={260}
         frameHeight={260}

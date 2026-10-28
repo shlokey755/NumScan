@@ -1,23 +1,18 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { colors } from '../theme';
 
+// No native navigation bar. Each screen draws its own minimal header.
 export default function RootLayout() {
   return (
     <>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: '#000' },
-          headerTintColor: '#fff',
-          contentStyle: { backgroundColor: '#000' },
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.bg },
         }}
-      >
-        <Stack.Screen name="index" options={{ title: 'NumScan' }} />
-        <Stack.Screen name="scan-qr" options={{ title: 'QR Code' }} />
-        <Stack.Screen name="scan-barcode" options={{ title: 'Barcode' }} />
-        <Stack.Screen name="scan-text" options={{ title: 'Text to Clipboard' }} />
-        <Stack.Screen name="scan-number" options={{ title: 'Number to Clipboard' }} />
-      </Stack>
+      />
     </>
   );
 }

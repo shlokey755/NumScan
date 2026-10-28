@@ -1,10 +1,12 @@
+import { CameraView } from 'expo-camera';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { CameraView } from 'expo-camera';
+import Viewfinder from './Viewfinder';
+import { colors } from '../theme';
 
-// The camera is exactly the size of the scan box, so only what is inside the box
-// is ever shown or read. It is unmounted when the screen is not focused, so only
-// one camera is ever active.
+// The camera is exactly the size of the scan area, so only what is inside the
+// corner brackets is shown and read. It unmounts when its screen loses focus,
+// so only one camera is ever active.
 export default function ScanCamera({
   cameraRef,
   active,
@@ -27,14 +29,14 @@ export default function ScanCamera({
   const size = { width, height };
 
   if (!active) {
-    return <View style={[styles.frame, size]} />;
+    return <View style={size} />;
   }
 
   return (
     <View style={[styles.frame, size]}>
       <CameraView
         ref={cameraRef}
-        style={[styles.camera, size]}
+        style={StyleSheet.absoluteFill}
         facing="back"
         enableTorch={enableTorch}
         barcodeScannerSettings={barcodeScannerSettings}
@@ -42,10 +44,10 @@ export default function ScanCamera({
         onCameraReady={() => setReady(true)}
         onMountError={(e) => setError(e?.message ?? 'Camera failed to start.')}
       />
-      <View pointerEvents="none" style={styles.outline} />
+      <Viewfinder width={width} height={height} />
       {!ready ? (
-        <View pointerEvents="none" style={styles.status}>
-          <Text style={styles.statusText}>{error ?? 'Starting camera...'}</Text>
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.status]}>
+          <Text style={styles.statusText}>{error ?? 'Starting camera'}</Text>
         </View>
       ) : null}
     </View>
@@ -54,26 +56,15 @@ export default function ScanCamera({
 
 const styles = StyleSheet.create({
   frame: {
-    position: 'relative',
-  },
-  camera: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  },
-  outline: {
-    ...StyleSheet.absoluteFillObject,
-    borderWidth: 2,
-    borderColor: '#00FF66',
+    backgroundColor: '#000',
   },
   status: {
-    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 10,
+    padding: 12,
   },
   statusText: {
-    color: '#fff',
+    color: colors.muted,
     fontSize: 14,
     textAlign: 'center',
   },

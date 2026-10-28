@@ -1,29 +1,30 @@
 import { useIsFocused } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import ActionButton from './ActionButton';
-import ResultCard from './ResultCard';
+import ResultPanel from './ResultPanel';
 import ScanCamera from './ScanCamera';
+import ScreenHeader, { IconButton } from './ScreenHeader';
+import { colors } from '../theme';
 
 const TYPE_LABELS = {
   qr: 'QR code',
   aztec: 'Aztec code',
   datamatrix: 'Data Matrix',
   pdf417: 'PDF417',
-  ean13: 'EAN-13 barcode',
-  ean8: 'EAN-8 barcode',
-  upc_a: 'UPC-A barcode',
-  upc_e: 'UPC-E barcode',
-  code128: 'Code 128 barcode',
-  code39: 'Code 39 barcode',
-  code93: 'Code 93 barcode',
-  itf14: 'ITF-14 barcode',
-  codabar: 'Codabar barcode',
+  ean13: 'EAN-13',
+  ean8: 'EAN-8',
+  upc_a: 'UPC-A',
+  upc_e: 'UPC-E',
+  code128: 'Code 128',
+  code39: 'Code 39',
+  code93: 'Code 93',
+  itf14: 'ITF-14',
+  codabar: 'Codabar',
 };
 
-// Shared by the QR and barcode screens. Codes are read automatically;
-// the first read is shown and scanning pauses until "Scan again".
-export default function CodeScanner({ barcodeTypes, frameWidth, frameHeight, hint }) {
+// Shared by the QR and barcode screens. Codes are read automatically. The first
+// read is shown and scanning pauses until "Scan again".
+export default function CodeScanner({ title, barcodeTypes, frameWidth, frameHeight, hint }) {
   const isFocused = useIsFocused();
   const cameraRef = useRef(null);
   const pausedRef = useRef(false); // ignores repeat events for the code already read
@@ -45,6 +46,17 @@ export default function CodeScanner({ barcodeTypes, frameWidth, frameHeight, hin
 
   return (
     <View style={styles.screen}>
+      <ScreenHeader
+        title={title}
+        right={
+          <IconButton
+            name={torch ? 'flash' : 'flash-off-outline'}
+            label={torch ? 'Turn torch off' : 'Turn torch on'}
+            onPress={() => setTorch((on) => !on)}
+          />
+        }
+      />
+
       <View style={styles.stage}>
         <ScanCamera
           cameraRef={cameraRef}
@@ -58,23 +70,17 @@ export default function CodeScanner({ barcodeTypes, frameWidth, frameHeight, hin
         <Text style={styles.hint}>{hint}</Text>
       </View>
 
-      <View style={styles.panel}>
+      <View style={styles.footer}>
         {result ? (
-          <ResultCard
+          <ResultPanel
             key={result.id}
-            title={TYPE_LABELS[result.type] ?? 'Code'}
+            label={TYPE_LABELS[result.type] ?? 'Code'}
             text={result.data}
-            copyLabel="Copy"
-            dismissLabel="Scan again"
             onDismiss={scanAgain}
           />
-        ) : null}
-        <View style={styles.row}>
-          <ActionButton
-            label={torch ? 'Torch off' : 'Torch on'}
-            onPress={() => setTorch((on) => !on)}
-          />
-        </View>
+        ) : (
+          <Text style={styles.idle}>Waiting for a code</Text>
+        )}
       </View>
     </View>
   );
@@ -83,7 +89,7 @@ export default function CodeScanner({ barcodeTypes, frameWidth, frameHeight, hin
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.bg,
   },
   stage: {
     flex: 1,
@@ -92,19 +98,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   hint: {
-    color: '#ccc',
+    color: colors.muted,
     fontSize: 15,
     textAlign: 'center',
-    marginTop: 18,
+    marginTop: 20,
   },
-  panel: {
-    padding: 16,
-    paddingBottom: 32,
-    gap: 12,
+  footer: {
+    minHeight: 170,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 20,
+    paddingBottom: 28,
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 12,
+  idle: {
+    color: colors.muted,
+    fontSize: 15,
+    textAlign: 'center',
+    paddingVertical: 24,
   },
 });

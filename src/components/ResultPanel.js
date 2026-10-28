@@ -1,11 +1,14 @@
 import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
 import { Alert, Linking, Share, StyleSheet, Text, View } from 'react-native';
-import ActionButton from './ActionButton';
+import Button from './Button';
+import { colors } from '../theme';
 import { isUrl, normalizeUrl } from '../lib/text';
 
-export default function ResultCard({
-  title,
+// Shown under the scanner once something has been read. A thin rule separates it
+// from the camera; there is no card or background.
+export default function ResultPanel({
+  label,
   text,
   copyLabel = 'Copy',
   dismissLabel = 'Scan again',
@@ -41,39 +44,57 @@ export default function ResultCard({
   };
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>{title}</Text>
-      {children ?? <Text selectable style={styles.text}>{text}</Text>}
+    <View style={styles.panel}>
+      <Text style={styles.label}>{label}</Text>
+      {children ?? (
+        <Text selectable style={styles.text}>
+          {text}
+        </Text>
+      )}
+
+      <Button
+        label={copied ? 'Copied' : copyLabel}
+        icon={copied ? 'checkmark' : 'copy-outline'}
+        variant="solid"
+        onPress={copy}
+      />
+
       <View style={styles.row}>
-        <ActionButton label={copied ? 'Copied' : copyLabel} onPress={copy} primary />
-        <ActionButton label="Share" onPress={share} />
-        {url ? <ActionButton label="Open link" onPress={open} /> : null}
-        <ActionButton label={dismissLabel} onPress={onDismiss} />
+        <Button label="Share" icon="share-outline" onPress={share} style={styles.flex} />
+        {url ? (
+          <Button label="Open link" icon="open-outline" onPress={open} style={styles.flex} />
+        ) : null}
       </View>
+
+      <Button label={dismissLabel} icon="refresh-outline" variant="ghost" onPress={onDismiss} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#111',
-    borderRadius: 12,
-    padding: 16,
+  panel: {
+    borderTopWidth: 1,
+    borderTopColor: colors.line,
+    paddingTop: 16,
     gap: 12,
   },
-  title: {
-    color: '#00FF66',
-    fontSize: 13,
+  label: {
+    color: colors.muted,
+    fontSize: 12,
     fontWeight: '600',
+    letterSpacing: 1,
     textTransform: 'uppercase',
   },
   text: {
-    color: '#fff',
-    fontSize: 17,
+    color: colors.text,
+    fontSize: 18,
+    lineHeight: 26,
   },
   row: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+    gap: 12,
+  },
+  flex: {
+    flex: 1,
   },
 });
