@@ -1,6 +1,7 @@
 import { useIsFocused } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ResultPanel from './ResultPanel';
 import ScanCamera from './ScanCamera';
 import ScreenHeader, { IconButton } from './ScreenHeader';
@@ -26,6 +27,7 @@ const TYPE_LABELS = {
 // read is shown and scanning pauses until "Scan again".
 export default function CodeScanner({ title, barcodeTypes, frameWidth, frameHeight, hint }) {
   const isFocused = useIsFocused();
+  const insets = useSafeAreaInsets();
   const cameraRef = useRef(null);
   const pausedRef = useRef(false); // ignores repeat events for the code already read
   const [torch, setTorch] = useState(false);
@@ -70,7 +72,7 @@ export default function CodeScanner({ title, barcodeTypes, frameWidth, frameHeig
         <Text style={styles.hint}>{hint}</Text>
       </View>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 32 }]}>
         {result ? (
           <ResultPanel
             key={result.id}
