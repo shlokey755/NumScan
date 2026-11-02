@@ -13,6 +13,7 @@ export default function ScanCamera({
   width,
   height,
   enableTorch = false,
+  zoom = 0,
   barcodeScannerSettings,
   onBarcodeScanned,
 }) {
@@ -39,6 +40,7 @@ export default function ScanCamera({
         style={StyleSheet.absoluteFill}
         facing="back"
         enableTorch={enableTorch}
+        zoom={zoom}
         barcodeScannerSettings={barcodeScannerSettings}
         onBarcodeScanned={onBarcodeScanned}
         onCameraReady={() => setReady(true)}
