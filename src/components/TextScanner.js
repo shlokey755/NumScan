@@ -8,6 +8,7 @@ import Button from './Button';
 import ResultPanel from './ResultPanel';
 import ScanCamera from './ScanCamera';
 import ScreenHeader, { IconButton } from './ScreenHeader';
+import ZoomSlider from './ZoomSlider';
 import { colors } from '../theme';
 import { extractDigitGroups, getTextInsideBox } from '../lib/text';
 
@@ -22,6 +23,7 @@ export default function TextScanner({ title, mode }) {
   const insets = useSafeAreaInsets();
   const cameraRef = useRef(null);
   const [torch, setTorch] = useState(false);
+  const [zoom, setZoom] = useState(0);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null); // { id, text } or { id, groups }
   const [message, setMessage] = useState(null);
@@ -94,8 +96,12 @@ export default function TextScanner({ title, mode }) {
           width={FRAME_WIDTH}
           height={FRAME_HEIGHT}
           enableTorch={torch}
+          zoom={zoom}
         />
         <Text style={styles.hint}>{hint}</Text>
+        <View style={styles.zoom}>
+          <ZoomSlider value={zoom} onChange={setZoom} />
+        </View>
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 32 }]}>
@@ -180,13 +186,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 56, // equal on both sides, so the frame stays centred
   },
   hint: {
     color: colors.muted,
     fontSize: 15,
     textAlign: 'center',
     marginTop: 20,
+  },
+  zoom: {
+    position: 'absolute',
+    right: 4,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
   },
   footer: {
     minHeight: 170,

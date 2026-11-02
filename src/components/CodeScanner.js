@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ResultPanel from './ResultPanel';
 import ScanCamera from './ScanCamera';
 import ScreenHeader, { IconButton } from './ScreenHeader';
+import ZoomSlider from './ZoomSlider';
 import { colors } from '../theme';
 
 const TYPE_LABELS = {
@@ -31,6 +32,7 @@ export default function CodeScanner({ title, barcodeTypes, frameWidth, frameHeig
   const cameraRef = useRef(null);
   const pausedRef = useRef(false); // ignores repeat events for the code already read
   const [torch, setTorch] = useState(false);
+  const [zoom, setZoom] = useState(0);
   const [result, setResult] = useState(null);
 
   const scannerSettings = useMemo(() => ({ barcodeTypes }), [barcodeTypes]);
@@ -66,10 +68,14 @@ export default function CodeScanner({ title, barcodeTypes, frameWidth, frameHeig
           width={frameWidth}
           height={frameHeight}
           enableTorch={torch}
+          zoom={zoom}
           barcodeScannerSettings={scannerSettings}
           onBarcodeScanned={handleScanned}
         />
         <Text style={styles.hint}>{hint}</Text>
+        <View style={styles.zoom}>
+          <ZoomSlider value={zoom} onChange={setZoom} />
+        </View>
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 32 }]}>
@@ -97,13 +103,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 56, // equal on both sides, so the frame stays centred
   },
   hint: {
     color: colors.muted,
     fontSize: 15,
     textAlign: 'center',
     marginTop: 20,
+  },
+  zoom: {
+    position: 'absolute',
+    right: 4,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
   },
   footer: {
     minHeight: 170,
