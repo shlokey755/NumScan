@@ -36,6 +36,12 @@
           "resizeMode": "contain",
           "backgroundColor": "#151515"
         }
+      ],
+      [
+        "expo-media-library",
+        {
+          "savePhotosPermission": "NumScan saves QR codes to your photos."
+        }
       ]
     ]
   }

@@ -1,21 +1,27 @@
 import * as Clipboard from 'expo-clipboard';
-import { useState } from 'react';
-import { Alert, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from '../components/Button';
 import ScreenHeader from '../components/ScreenHeader';
 import { colors } from '../theme';
 import { toQrLink } from '../lib/qr';
+import { saveQrToPhotos, shareQrImage } from '../lib/qrImage';
 
-// Turns a link into a QR code. Scanning it with the QR screen, or any camera app,
-// opens the link.
+const QUIET_ZONE = 16; // blank margin around the code, which scanners need
+const EXPORT_SIZE = 1024; // size of the saved and shared PNG, in pixels
+
+// Turns a link into a QR code. Save and Share send the code as an image,
+// so the QR itself is what leaves the app.
 export default function MakeQrScreen() {
   const insets = useSafeAreaInsets();
+  const svgRef = useRef(null);
   const [input, setInput] = useState('');
   const [link, setLink] = useState(null); // the link the QR code encodes
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [busy, setBusy] = useState(null); // 'save' | 'share' | null
 
   const paste = async () => {
     try {
@@ -58,11 +64,42 @@ export default function MakeQrScreen() {
     }
   };
 
-  const shareLink = async () => {
+  // Renders the on-screen QR as a base64 PNG at full export size.
+  const exportPng = () =>
+    new Promise((resolve, reject) => {
+      const svg = svgRef.current;
+      if (!svg?.toDataURL) {
+        reject(new Error('The QR code is not ready yet. Try again.'));
+        return;
+      }
+      svg.toDataURL(
+        (base64) => (base64 ? resolve(base64) : reject(new Error('Could not draw the QR code.'))),
+        { width: EXPORT_SIZE, height: EXPORT_SIZE }
+      );
+    });
+
+  const saveImage = async () => {
+    setBusy('save');
     try {
-      await Share.share({ message: link });
+      const base64 = await exportPng();
+      await saveQrToPhotos(base64);
+      Alert.alert('Saved', 'The QR code is in your photos.');
     } catch (e) {
-      Alert.alert('Share failed', String(e?.message ?? e));
+      Alert.alert('Could not save', String(e?.message ?? e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const shareImage = async () => {
+    setBusy('share');
+    try {
+      const base64 = await exportPng();
+      await shareQrImage(base64);
+    } catch (e) {
+      Alert.alert('Could not share', String(e?.message ?? e));
+    } finally {
+      setBusy(null);
     }
   };
 
@@ -108,7 +145,17 @@ export default function MakeQrScreen() {
         {link ? (
           <View style={styles.result}>
             <View style={styles.codeTile}>
-              <QRCode value={link} size={230} ecl="M" color="#000" backgroundColor="#fff" />
+              <QRCode
+                value={link}
+                size={230}
+                ecl="M"
+                quietZone={QUIET_ZONE}
+                color="#000"
+                backgroundColor="#fff"
+                getRef={(c) => {
+                  svgRef.current = c;
+                }}
+              />
             </View>
 
             <Text style={styles.label}>Opens</Text>
@@ -116,14 +163,31 @@ export default function MakeQrScreen() {
               {link}
             </Text>
 
+            <Button
+              label="Save image"
+              icon="download-outline"
+              variant="solid"
+              onPress={saveImage}
+              loading={busy === 'save'}
+              disabled={busy !== null}
+            />
+
             <View style={styles.row}>
+              <Button
+                label="Share QR"
+                icon="share-outline"
+                onPress={shareImage}
+                loading={busy === 'share'}
+                disabled={busy !== null}
+                style={styles.flex}
+              />
               <Button
                 label={copied ? 'Copied' : 'Copy link'}
                 icon={copied ? 'checkmark' : 'copy-outline'}
                 onPress={copyLink}
+                disabled={busy !== null}
                 style={styles.flex}
               />
-              <Button label="Share" icon="share-outline" onPress={shareLink} style={styles.flex} />
             </View>
 
             <Button label="New link" icon="create-outline" variant="ghost" onPress={newLink} />
@@ -181,10 +245,10 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   // QR codes need dark-on-light to scan, so the code sits on a white square.
+  // The quiet zone inside the code provides the white margin.
   codeTile: {
     alignSelf: 'center',
     backgroundColor: '#fff',
-    padding: 16,
   },
   link: {
     color: colors.text,
