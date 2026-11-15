@@ -29,6 +29,12 @@ const OPTIONS = [
     title: 'Numbers',
     detail: 'Pick out digits. Copy one or all.',
   },
+  {
+    href: '/make-qr',
+    icon: 'create-outline',
+    title: 'Make QR code',
+    detail: 'Turn a link into a QR code to scan.',
+  },
 ];
 
 export default function HomeScreen() {
