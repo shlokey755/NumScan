@@ -83,18 +83,7 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.modes, { paddingBottom: insets.bottom + 12 }]}>
-        {MODES.map((mode) => (
-          <Pressable
-            key={mode.href}
-            onPress={() => router.push(mode.href)}
-            style={({ pressed }) => [styles.pill, pressed && styles.rowPressed]}
-          >
-            <Ionicons name={mode.icon} size={18} color={colors.text} />
-            <Text style={styles.pillLabel}>{mode.label}</Text>
-          </Pressable>
-        ))}
-      </View>
+      
     </View>
   );
 }
