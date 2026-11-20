@@ -44,7 +44,24 @@ export function getTextInsideBox(result, photo, boxWidth, boxHeight) {
   return lines;
 }
 
+// Letters that OCR often reads in place of digits, and the digit they stand for.
+const LOOK_ALIKE = { O: '0', o: '0', I: '1', l: '1', S: '5' };
+
+// Fixes look-alike letters only in a token that already has a digit and whose
+// letters are all look-alikes. "4O1" -> "401", "SO5" -> "505".
+// "IBAN" and "A1O" are left alone.
+export function fixLookAlikes(token) {
+  if (!/\d/.test(token)) return token;
+  const letters = token.match(/[A-Za-z]/g) ?? [];
+  if (!letters.every((ch) => LOOK_ALIKE[ch] !== undefined)) return token;
+  return token.replace(/[A-Za-z]/g, (ch) => LOOK_ALIKE[ch]);
+}
+
 // Each run of digits becomes one entry, so "Item 123 Price 456" -> ["123", "456"].
+// Look-alike letters inside number tokens are corrected first.
 export function extractDigitGroups(text) {
-  return text.match(/\d+/g) ?? [];
+  return text
+    .split(/\s+/)
+    .map(fixLookAlikes)
+    .flatMap((token) => token.match(/\d+/g) ?? []);
 }
