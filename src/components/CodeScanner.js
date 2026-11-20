@@ -11,6 +11,8 @@ import ZoomSlider from './ZoomSlider';
 import useCopyToast from './useCopyToast';
 import { colors } from '../theme';
 import { batchClipboardText, trackScan } from '../lib/batch';
+import { playBeep, successHaptic } from '../lib/feedback';
+import { rememberScan } from '../lib/history';
 
 const TYPE_LABELS = {
   qr: 'QR code',
@@ -31,7 +33,7 @@ const TYPE_LABELS = {
 // Shared by the QR and barcode screens. Every code read is copied to the clipboard.
 // Single mode shows the first read and pauses until "Scan again".
 // Batch mode keeps scanning, lists each code, and copies the whole batch, one per line.
-export default function CodeScanner({ title, barcodeTypes, frameWidth, frameHeight, hint }) {
+export default function CodeScanner({ title, barcodeTypes, frameWidth, frameHeight, hint, beep = false }) {
   const isFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const cameraRef = useRef(null);
@@ -61,6 +63,9 @@ export default function CodeScanner({ title, barcodeTypes, frameWidth, frameHeig
       pausedRef.current = true;
       setResult({ id: Date.now(), type, data });
       copy(data, 'Copied to clipboard');
+      successHaptic();
+      if (beep) playBeep();
+      rememberScan(TYPE_LABELS[type] ?? 'Code', data);
       return;
     }
 
@@ -71,6 +76,9 @@ export default function CodeScanner({ title, barcodeTypes, frameWidth, frameHeig
     const next = [...itemsRef.current, { id: Date.now(), type, data }];
     setBatchItems(next);
     copy(batchClipboardText(next), `Copied · ${next.length} in batch`);
+    successHaptic();
+    if (beep) playBeep();
+    rememberScan(TYPE_LABELS[type] ?? 'Code', data);
   };
 
   const scanAgain = () => {

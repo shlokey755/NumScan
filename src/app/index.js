@@ -72,9 +72,7 @@ export default function HomeScreen() {
           <Text style={styles.empty}>No tools match "{query.trim()}".</Text>
         ) : null}
       </View>
-
-      <Text style={styles.footnote}>Scanning runs on your phone.</Text>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -82,6 +80,9 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.bg,
+  },
+  scroll: {
+    flex: 1,
   },
   brand: {
     flexDirection: 'row',
@@ -158,5 +159,27 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 13,
     marginTop: 28,
+  },
+  modes: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.line,
+    backgroundColor: colors.bg,
+  },
+  pill: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  pillLabel: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

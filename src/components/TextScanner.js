@@ -13,6 +13,8 @@ import ZoomSlider from './ZoomSlider';
 import useCopyToast from './useCopyToast';
 import { colors } from '../theme';
 import { extractDigitGroups, getTextInsideBox } from '../lib/text';
+import { successHaptic } from '../lib/feedback';
+import { rememberScan } from '../lib/history';
 
 // The scan area. Only text whose centre is inside it is read.
 const FRAME_WIDTH = 260;
@@ -65,9 +67,13 @@ export default function TextScanner({ title, mode }) {
         }
         setResult({ id: Date.now(), groups });
         copy(groups.join(''), 'Copied to clipboard');
+        successHaptic();
+        rememberScan('Numbers', groups.join(''));
       } else {
         setResult({ id: Date.now(), text: inside });
         copy(inside, 'Copied to clipboard');
+        successHaptic();
+        rememberScan('Text', inside);
       }
     } catch (error) {
       console.error('Scanning Error:', error);

@@ -21,6 +21,7 @@ export default function ScanBarcodeScreen() {
         barcodeTypes={BARCODE_TYPES}
         frameWidth={280}
         frameHeight={140}
+        beep
         hint="Line the barcode up with the box. Keep it flat and in focus."
       />
     </PermissionGate>
