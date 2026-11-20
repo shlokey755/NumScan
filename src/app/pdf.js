@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from '../components/Button';
 import ScreenHeader from '../components/ScreenHeader';
@@ -21,6 +21,12 @@ const TABS = [
   { value: 'split', label: 'Split' },
   { value: 'text', label: 'Text' },
   { value: 'images', label: 'Photos' },
+];
+
+const PER_PAGE = [
+  { value: 1, label: '1' },
+  { value: 2, label: '2' },
+  { value: 4, label: '4' },
 ];
 
 const PDF_SHARE = (dialogTitle) => ({
@@ -51,6 +57,9 @@ export default function PdfScreen() {
   const [parts, setParts] = useState([]); // split output: [{ id, label, file }]
   const [text, setText] = useState('');
   const [photos, setPhotos] = useState([]); // images: [{ uri }]
+  const [perPage, setPerPage] = useState(1); // images: 1, 2 or 4 photos per page
+  const [pageNumbers, setPageNumbers] = useState(false);
+  const [photoHeader, setPhotoHeader] = useState('');
 
   // Runs one action with a busy state and a readable message if it fails.
   const run = async (name, task) => {
@@ -131,7 +140,8 @@ export default function PdfScreen() {
         const jpeg = await toJpeg(photo.uri);
         items.push({ bytes: await readFileBytes(jpeg.uri), kind: 'jpg' });
       }
-      const file = writeCacheFile('NumScan-photos.pdf', await createPdfFromImages(items));
+      const pdf = await createPdfFromImages(items, { perPage, pageNumbers, header: photoHeader });
+      const file = writeCacheFile('NumScan-photos.pdf', pdf);
       await shareFile(file.uri, PDF_SHARE('Share PDF'));
     });
 
@@ -238,7 +248,7 @@ export default function PdfScreen() {
 
         {tab === 'images' ? (
           <>
-            <Text style={styles.hint}>Each photo becomes one page, in the order chosen.</Text>
+            <Text style={styles.hint}>Photos are placed in the order chosen.</Text>
             {photos.length > 0 ? (
               <View style={styles.thumbs}>
                 {photos.map((photo, index) => (
@@ -247,6 +257,23 @@ export default function PdfScreen() {
               </View>
             ) : null}
             <Button label="Add photos" icon="add-outline" onPress={addPhotos} loading={busy === 'pick'} disabled={busy !== null} />
+            <Text style={styles.label}>Photos per page</Text>
+            <Segmented options={PER_PAGE} value={perPage} onChange={setPerPage} />
+            <Pressable
+              onPress={() => setPageNumbers((on) => !on)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: pageNumbers }}
+              style={styles.toggle}
+            >
+              <Text style={styles.toggleText}>{pageNumbers ? '[x]' : '[ ]'} Page numbers</Text>
+            </Pressable>
+            <TextInput
+              value={photoHeader}
+              onChangeText={setPhotoHeader}
+              placeholder="Header (optional)"
+              placeholderTextColor={colors.muted}
+              style={styles.input}
+            />
             <Button
               label={`Make PDF from ${photos.length} photo${photos.length === 1 ? '' : 's'}`}
               icon="share-outline"
@@ -322,6 +349,18 @@ const styles = StyleSheet.create({
     height: 64,
     borderWidth: 1,
     borderColor: colors.line,
+  },
+  label: {
+    color: colors.muted,
+    fontSize: 13,
+  },
+  toggle: {
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  toggleText: {
+    color: colors.text,
+    fontSize: 16,
   },
   divider: {
     height: 1,

@@ -40,6 +40,12 @@ export function readFileBytes(uri) {
   return new FileSystem.File(uri).bytes();
 }
 
+// Reads a whole file as text. Resolves to a string.
+export function readFileText(uri) {
+  const FileSystem = fileSystem();
+  return new FileSystem.File(uri).text();
+}
+
 // Opens the system share sheet for a file.
 export async function shareFile(uri, { mimeType, UTI, dialogTitle }) {
   const Sharing = sharing();
