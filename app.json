@@ -42,6 +42,12 @@
         {
           "savePhotosPermission": "NumScan saves QR codes to your photos."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "NumScan reads the photos you choose to scan, convert or make into PDFs."
+        }
       ]
     ]
   }
