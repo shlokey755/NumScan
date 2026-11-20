@@ -1,48 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme';
-
-const OPTIONS = [
-  {
-    href: '/scan-qr',
-    icon: 'qr-code-outline',
-    title: 'QR code',
-    detail: 'Read a code. Links open in one tap.',
-  },
-  {
-    href: '/scan-barcode',
-    icon: 'barcode-outline',
-    title: 'Barcode',
-    detail: 'Product and shipping barcodes.',
-  },
-  {
-    href: '/scan-text',
-    icon: 'text-outline',
-    title: 'Text',
-    detail: 'Copy the text inside the box.',
-  },
-  {
-    href: '/scan-number',
-    icon: 'keypad-outline',
-    title: 'Numbers',
-    detail: 'Pick out digits. Copy one or all.',
-  },
-  {
-    href: '/make-qr',
-    icon: 'create-outline',
-    title: 'Make QR code',
-    detail: 'Turn a link into a QR code to scan.',
-  },
-];
+import { TOOLS, searchTools } from '../lib/tools';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const [query, setQuery] = useState('');
+  const results = searchTools(query, TOOLS);
 
   return (
     <ScrollView
       style={styles.screen}
+      keyboardShouldPersistTaps="handled"
       contentContainerStyle={{
         paddingTop: insets.top + 36,
         paddingBottom: insets.bottom + 24,
@@ -55,22 +27,50 @@ export default function HomeScreen() {
       </View>
       <Text style={styles.tagline}>Point at it. Paste it anywhere.</Text>
 
-      <View style={styles.list}>
-        {OPTIONS.map((option) => (
+      <View style={styles.search}>
+        <Ionicons name="search-outline" size={20} color={colors.muted} />
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search tools"
+          placeholderTextColor={colors.muted}
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="search"
+          accessibilityLabel="Search tools"
+          style={styles.searchInput}
+        />
+        {query ? (
           <Pressable
-            key={option.href}
-            onPress={() => router.push(option.href)}
+            onPress={() => setQuery('')}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Clear search"
+          >
+            <Ionicons name="close-outline" size={22} color={colors.muted} />
+          </Pressable>
+        ) : null}
+      </View>
+
+      <View style={styles.list}>
+        {results.map((tool) => (
+          <Pressable
+            key={tool.href}
+            onPress={() => router.push(tool.href)}
             android_ripple={{ color: 'rgba(128,128,128,0.2)' }}
             style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
           >
-            <Ionicons name={option.icon} size={26} color={colors.text} />
+            <Ionicons name={tool.icon} size={26} color={colors.text} />
             <View style={styles.rowText}>
-              <Text style={styles.rowTitle}>{option.title}</Text>
-              <Text style={styles.rowDetail}>{option.detail}</Text>
+              <Text style={styles.rowTitle}>{tool.title}</Text>
+              <Text style={styles.rowDetail}>{tool.detail}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={colors.muted} />
           </Pressable>
         ))}
+        {results.length === 0 ? (
+          <Text style={styles.empty}>No tools match "{query.trim()}".</Text>
+        ) : null}
       </View>
 
       <Text style={styles.footnote}>Scanning runs on your phone.</Text>
@@ -104,8 +104,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 14,
   },
+  search: {
+    marginTop: 28,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  searchInput: {
+    flex: 1,
+    height: 50,
+    color: colors.text,
+    fontSize: 16,
+  },
   list: {
-    marginTop: 40,
+    marginTop: 24,
     borderTopWidth: 1,
     borderTopColor: colors.line,
   },
@@ -132,6 +148,11 @@ const styles = StyleSheet.create({
   rowDetail: {
     color: colors.muted,
     fontSize: 14,
+  },
+  empty: {
+    color: colors.muted,
+    fontSize: 15,
+    paddingVertical: 20,
   },
   footnote: {
     color: colors.muted,

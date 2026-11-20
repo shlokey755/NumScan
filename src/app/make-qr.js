@@ -6,31 +6,30 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from '../components/Button';
 import ScreenHeader from '../components/ScreenHeader';
 import { colors } from '../theme';
-import { toQrLink } from '../lib/qr';
+import { MAX_QR_BYTES, toQrText, utf8Length } from '../lib/qr';
 import { saveQrToPhotos, shareQrImage } from '../lib/qrImage';
 
 const QUIET_ZONE = 16; // blank margin around the code, which scanners need
 const EXPORT_SIZE = 1024; // size of the saved and shared PNG, in pixels
 
-// Turns a link into a QR code. Save and Share send the code as an image,
-// so the QR itself is what leaves the app.
+// Turns any text into a QR code. Save and Share send the code as an image.
 export default function MakeQrScreen() {
   const insets = useSafeAreaInsets();
   const svgRef = useRef(null);
   const [input, setInput] = useState('');
-  const [link, setLink] = useState(null); // the link the QR code encodes
+  const [text, setText] = useState(null); // the exact text the QR code encodes
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(null); // 'save' | 'share' | null
 
   const paste = async () => {
     try {
-      const text = await Clipboard.getStringAsync();
-      if (!text?.trim()) {
-        setError('Nothing to paste. Copy a link first.');
+      const clip = await Clipboard.getStringAsync();
+      if (!clip) {
+        setError('Nothing to paste. Copy some text first.');
         return;
       }
-      setInput(text.trim());
+      setInput(clip);
       setError(null);
     } catch (e) {
       Alert.alert('Paste failed', String(e?.message ?? e));
@@ -38,26 +37,26 @@ export default function MakeQrScreen() {
   };
 
   const make = () => {
-    const result = toQrLink(input);
+    const result = toQrText(input);
     if (result.error) {
-      setLink(null);
+      setText(null);
       setError(result.error);
       return;
     }
     setError(null);
     setCopied(false);
-    setLink(result.link);
+    setText(result.text);
   };
 
-  const newLink = () => {
-    setLink(null);
+  const newCode = () => {
+    setText(null);
     setError(null);
     setCopied(false);
   };
 
-  const copyLink = async () => {
+  const copyText = async () => {
     try {
-      await Clipboard.setStringAsync(link);
+      await Clipboard.setStringAsync(text);
       setCopied(true);
     } catch (e) {
       Alert.alert('Copy failed', String(e?.message ?? e));
@@ -111,26 +110,23 @@ export default function MakeQrScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.label}>Link</Text>
-        <View style={styles.inputRow}>
-          <TextInput
-            value={input}
-            onChangeText={(text) => {
-              setInput(text);
-              if (error) setError(null);
-            }}
-            onSubmitEditing={make}
-            placeholder="https://example.com"
-            placeholderTextColor={colors.muted}
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="off"
-            keyboardType="url"
-            returnKeyType="done"
-            style={styles.input}
-          />
-          <Button label="Paste" icon="clipboard-outline" onPress={paste} style={styles.pasteButton} />
-        </View>
+        <Text style={styles.label}>Text</Text>
+        <TextInput
+          value={input}
+          onChangeText={(value) => {
+            setInput(value);
+            if (error) setError(null);
+          }}
+          placeholder="Type or paste anything: a link, a note, a code"
+          placeholderTextColor={colors.muted}
+          multiline
+          textAlignVertical="top"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="off"
+          style={styles.input}
+        />
+        <Button label="Paste" icon="clipboard-outline" onPress={paste} style={styles.outlineButton} />
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -142,11 +138,11 @@ export default function MakeQrScreen() {
           disabled={!input.trim()}
         />
 
-        {link ? (
+        {text ? (
           <View style={styles.result}>
             <View style={styles.codeTile}>
               <QRCode
-                value={link}
+                value={text}
                 size={230}
                 ecl="M"
                 quietZone={QUIET_ZONE}
@@ -158,9 +154,11 @@ export default function MakeQrScreen() {
               />
             </View>
 
-            <Text style={styles.label}>Opens</Text>
-            <Text selectable style={styles.link}>
-              {link}
+            <Text style={styles.label}>
+              Encodes · {utf8Length(text)} of {MAX_QR_BYTES} bytes
+            </Text>
+            <Text selectable style={styles.encoded}>
+              {text}
             </Text>
 
             <Button
@@ -182,15 +180,15 @@ export default function MakeQrScreen() {
                 style={styles.flex}
               />
               <Button
-                label={copied ? 'Copied' : 'Copy link'}
+                label={copied ? 'Copied' : 'Copy text'}
                 icon={copied ? 'checkmark' : 'copy-outline'}
-                onPress={copyLink}
+                onPress={copyText}
                 disabled={busy !== null}
                 style={styles.flex}
               />
             </View>
 
-            <Button label="New link" icon="create-outline" variant="ghost" onPress={newLink} />
+            <Button label="New code" icon="create-outline" variant="ghost" onPress={newCode} />
           </View>
         ) : null}
       </ScrollView>
@@ -215,21 +213,15 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
-  inputRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
   input: {
-    flex: 1,
-    minHeight: 50,
+    minHeight: 120,
     borderWidth: 1,
     borderColor: colors.line,
     color: colors.text,
     fontSize: 16,
-    paddingHorizontal: 14,
+    padding: 14,
   },
-  pasteButton: {
-    minWidth: 96,
+  outlineButton: {
     borderWidth: 1,
     borderColor: colors.line,
   },
@@ -250,7 +242,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     backgroundColor: '#fff',
   },
-  link: {
+  encoded: {
     color: colors.text,
     fontSize: 16,
     lineHeight: 22,
