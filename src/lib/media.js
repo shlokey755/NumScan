@@ -71,6 +71,17 @@ export async function pickPdfs({ multiple = false } = {}) {
   return result.canceled ? [] : result.assets;
 }
 
+// Returns the picked files of any type, or [] if the user cancelled.
+export async function pickAnyFiles({ multiple = false } = {}) {
+  const DocumentPicker = documentPicker();
+  const result = await DocumentPicker.getDocumentAsync({
+    type: '*/*',
+    multiple,
+    copyToCacheDirectory: true,
+  });
+  return result.canceled ? [] : result.assets;
+}
+
 // Re-encodes an image through the image manipulator. Returns { uri, width, height }.
 async function manipulate(uri, actions, format = 'JPEG') {
   const Manipulator = imageManipulator();

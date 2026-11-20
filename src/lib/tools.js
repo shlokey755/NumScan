@@ -72,6 +72,62 @@ export const TOOLS = [
     detail: 'Play a video or make a smaller MP4.',
     keywords: ['video', 'movies', 'play', 'mp4', 'compress', 'smaller', 'save', 'share'],
   },
+  {
+    href: '/lab-calc',
+    icon: 'flask-outline',
+    title: 'Lab calculator',
+    detail: 'Unit conversion, dilution, error, mean and fit.',
+    keywords: ['lab', 'calculator', 'unit', 'convert', 'dilution', 'percent', 'error', 'mean', 'standard deviation', 'sd', 'linear fit', 'regression', 'stats', 'formula', 'practical'],
+  },
+  {
+    href: '/table',
+    icon: 'grid-outline',
+    title: 'Table to CSV or Excel',
+    detail: 'Paste readings, then save as CSV or .xlsx.',
+    keywords: ['table', 'csv', 'excel', 'xlsx', 'spreadsheet', 'sheet', 'readings', 'paste', 'data', 'grid', 'export'],
+  },
+  {
+    href: '/text-viewer',
+    icon: 'code-slash-outline',
+    title: 'Text and code viewer',
+    detail: 'View and tidy .txt, .csv, .json, .py, .c or .html.',
+    keywords: ['text', 'code', 'viewer', 'json', 'csv', 'python', 'c', 'html', 'format', 'clean', 'txt', 'view', 'file'],
+  },
+  {
+    href: '/zip-files',
+    icon: 'archive-outline',
+    title: 'Rename and zip',
+    detail: 'Name files with a template, then share one ZIP.',
+    keywords: ['zip', 'rename', 'archive', 'batch', 'bundle', 'files', 'name', 'template', 'package'],
+  },
+  {
+    href: '/projects',
+    icon: 'folder-outline',
+    title: 'Projects',
+    detail: 'Keep files grouped by subject or experiment.',
+    keywords: ['project', 'folder', 'folders', 'subject', 'experiment', 'group', 'organise', 'organize', 'files', 'storage'],
+  },
+  {
+    href: '/scan-clean',
+    icon: 'scan-outline',
+    title: 'Clean a scan',
+    detail: 'Black ink on white, with shadows removed.',
+    keywords: ['scan', 'clean', 'document', 'notebook', 'handwriting', 'contrast', 'black', 'white', 'shadow', 'photo'],
+  },
+  {
+    href: '/pdf-edit',
+    icon: 'reorder-four-outline',
+    title: 'Edit PDF pages',
+    detail: 'Reorder, turn or remove pages before upload.',
+    keywords: ['pdf', 'pages', 'rotate', 'turn', 'delete', 'remove', 'reorder', 'sideways', 'blank', 'edit'],
+  },
+  {
+    href: '/pdf-stamp',
+    icon: 'create-outline',
+    title: 'Stamp and sign PDF',
+    detail: 'Add DRAFT, a header, or your signature.',
+    keywords: ['pdf', 'stamp', 'watermark', 'draft', 'header', 'signature', 'sign', 'name', 'roll', 'declaration', 'form'],
+  },
 ];
 
 // Every word typed must match part of the tool's title or one of its keywords.
