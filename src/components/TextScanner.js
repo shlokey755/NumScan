@@ -8,7 +8,9 @@ import Button from './Button';
 import ResultPanel from './ResultPanel';
 import ScanCamera from './ScanCamera';
 import ScreenHeader, { IconButton } from './ScreenHeader';
+import Toast from './Toast';
 import ZoomSlider from './ZoomSlider';
+import useCopyToast from './useCopyToast';
 import { colors } from '../theme';
 import { extractDigitGroups, getTextInsideBox } from '../lib/text';
 
@@ -17,6 +19,7 @@ const FRAME_WIDTH = 260;
 const FRAME_HEIGHT = 120;
 
 // Shared by the text and number screens. Nothing is read until Capture is tapped.
+// A successful capture is copied to the clipboard straight away.
 export default function TextScanner({ title, mode }) {
   const isNumber = mode === 'number';
   const isFocused = useIsFocused();
@@ -27,6 +30,7 @@ export default function TextScanner({ title, mode }) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null); // { id, text } or { id, groups }
   const [message, setMessage] = useState(null);
+  const { toast, copy } = useCopyToast();
 
   const hint = isNumber
     ? 'Put the number inside the box, then tap Capture.'
@@ -60,8 +64,10 @@ export default function TextScanner({ title, mode }) {
           return;
         }
         setResult({ id: Date.now(), groups });
+        copy(groups.join(''), 'Copied to clipboard');
       } else {
         setResult({ id: Date.now(), text: inside });
+        copy(inside, 'Copied to clipboard');
       }
     } catch (error) {
       console.error('Scanning Error:', error);
@@ -102,6 +108,7 @@ export default function TextScanner({ title, mode }) {
         <View style={styles.zoom}>
           <ZoomSlider value={zoom} onChange={setZoom} />
         </View>
+        <Toast toast={toast} />
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 32 }]}>
