@@ -37,6 +37,41 @@ export const TOOLS = [
     detail: 'Turn any text into a QR code.',
     keywords: ['qr', 'make', 'create', 'generate', 'encode', 'text', 'link', 'save', 'share', 'image', 'code'],
   },
+  {
+    href: '/from-photo',
+    icon: 'image-outline',
+    title: 'Read a photo',
+    detail: 'Read codes, text or numbers from a photo.',
+    keywords: ['photo', 'photos', 'image', 'picture', 'ocr', 'codes', 'text', 'numbers', 'library'],
+  },
+  {
+    href: '/history',
+    icon: 'time-outline',
+    title: 'History',
+    detail: 'Copy or delete your recent scans.',
+    keywords: ['history', 'recent', 'saved', 'copies', 'scan', 'clipboard', 'delete', 'clear'],
+  },
+  {
+    href: '/pdf',
+    icon: 'document-text-outline',
+    title: 'PDF tools',
+    detail: 'Merge, split or create PDF files.',
+    keywords: ['pdf', 'document', 'merge', 'split', 'pages', 'photos', 'images', 'text', 'share'],
+  },
+  {
+    href: '/image-tools',
+    icon: 'images-outline',
+    title: 'Image tools',
+    detail: 'View, zoom or convert photos.',
+    keywords: ['image', 'images', 'photo', 'photos', 'picture', 'zoom', 'convert', 'jpeg', 'png', 'webp', 'share'],
+  },
+  {
+    href: '/video',
+    icon: 'videocam-outline',
+    title: 'Video',
+    detail: 'Play a video or make a smaller MP4.',
+    keywords: ['video', 'movies', 'play', 'mp4', 'compress', 'smaller', 'save', 'share'],
+  },
 ];
 
 // Every word typed must match part of the tool's title or one of its keywords.
