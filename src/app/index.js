@@ -72,7 +72,7 @@ export default function HomeScreen() {
           <Text style={styles.empty}>No tools match "{query.trim()}".</Text>
         ) : null}
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
