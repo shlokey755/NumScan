@@ -35,6 +35,15 @@ function barcodeScanner() {
   }
 }
 
+function textRecognizer() {
+  try {
+    const mod = require('@react-native-ml-kit/text-recognition');
+    return mod.default ?? mod;
+  } catch (cause) {
+    throw missingBuild(cause);
+  }
+}
+
 function videoCompressor() {
   try {
     return require('react-native-compressor');
@@ -116,6 +125,30 @@ export async function readCodes(uri) {
   const scanner = barcodeScanner();
   const barcodes = await scanner.scan(uri);
   return [...new Set(barcodes.map((barcode) => barcode.value).filter(Boolean))];
+}
+
+// Reads the text in a photo with ML Kit. Returns the trimmed text, or '' if there is none.
+export async function readText(uri) {
+  const recognizer = textRecognizer();
+  const result = await recognizer.recognize(uri);
+  return (result?.text ?? '').trim();
+}
+
+// Turns to try, in order, when the photo as picked finds nothing: the photo itself,
+// then a quarter turn each way and a half turn. Turn 0 is the photo as it is.
+export const READ_TURNS = [0, 90, 270, 180];
+
+// Reads the photo at each turn until one finds something. `read(uri)` resolves to an
+// array of found items. `turnCopy(uri, degrees)` resolves to the uri of a turned copy.
+// A copy is made only for turns that are reached, so an upright photo costs one read.
+// Returns { items, turn }, where turn is null when no turn found anything.
+export async function readTurned(uri, { read, turnCopy, turns = READ_TURNS }) {
+  for (const turn of turns) {
+    const target = turn === 0 ? uri : await turnCopy(uri, turn);
+    const items = await read(target);
+    if (items.length > 0) return { items, turn };
+  }
+  return { items: [], turn: null };
 }
 
 // Re-encodes a video as a smaller MP4. `onProgress` gets a number from 0 to 1.

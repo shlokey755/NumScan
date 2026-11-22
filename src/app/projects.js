@@ -1,45 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from '../components/Button';
 import ScreenHeader, { IconButton } from '../components/ScreenHeader';
 import { colors } from '../theme';
 import { pickAnyFiles } from '../lib/media';
 import { shareFile } from '../lib/files';
+import { mimeFor } from '../lib/projectRoot';
 import {
+  chooseSaveFolder,
+  copyFileForShare,
   createProject,
   deleteFile,
   deleteProject,
   importFiles,
   listFiles,
   listProjects,
-  projectFileUri,
+  saveFolderStatus,
 } from '../lib/projects';
-
-const MIME = {
-  pdf: 'application/pdf',
-  txt: 'text/plain',
-  csv: 'text/csv',
-  json: 'application/json',
-  html: 'text/html',
-  htm: 'text/html',
-  png: 'image/png',
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-  webp: 'image/webp',
-  heic: 'image/heic',
-  mp4: 'video/mp4',
-  mov: 'video/quicktime',
-  zip: 'application/zip',
-};
-
-// The MIME type from the extension, so the share sheet offers the right apps.
-function mimeFor(name) {
-  const dot = name.lastIndexOf('.');
-  const ext = dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
-  return MIME[ext] ?? 'application/octet-stream';
-}
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -51,11 +30,14 @@ function countLabel(n) {
   return `${n} file${n === 1 ? '' : 's'}`;
 }
 
-// Projects group scans by subject or experiment. Files stay in this app until shared.
+// Projects group scans by subject or experiment. Each project is a folder inside the save
+// folder the user chose, so its files can be seen in the phone's Files app.
 export default function ProjectsScreen() {
   const insets = useSafeAreaInsets();
   const [busy, setBusy] = useState(null);
   const [message, setMessage] = useState(null);
+  // The save folder: state is 'checking', 'none', 'lost' (chosen but no longer open) or 'ready'.
+  const [root, setRoot] = useState({ state: 'checking', name: '' });
   const [projects, setProjects] = useState([]); // [{ name, fileCount }]
   const [name, setName] = useState('');
   const [open, setOpen] = useState(null); // name of the project on screen
@@ -70,8 +52,27 @@ export default function ProjectsScreen() {
     } catch (error) {
       console.error('Projects Error:', error);
       setMessage(error?.message ?? 'Something went wrong. Try again.');
+      // A save folder that was lost shows up as an error, so check its state again.
+      try {
+        loadSaveFolder();
+      } catch (reloadError) {
+        console.error('Save folder check failed:', reloadError);
+      }
     } finally {
       setBusy(null);
+    }
+  };
+
+  // Reads the save folder state and, when the folder can be used, the project list.
+  const loadSaveFolder = () => {
+    const status = saveFolderStatus();
+    setRoot(status);
+    if (status.state === 'ready') {
+      setProjects(listProjects());
+    } else {
+      setOpen(null);
+      setFiles([]);
+      setProjects([]);
     }
   };
 
@@ -79,8 +80,17 @@ export default function ProjectsScreen() {
   const refreshFiles = () => setFiles(listFiles(open));
 
   useEffect(() => {
-    run('load', async () => reloadProjects());
+    run('load', async () => loadSaveFolder());
   }, []);
+
+  const chooseFolder = () =>
+    run('choose', async () => {
+      const chosen = await chooseSaveFolder();
+      if (chosen === null) return; // The user closed the picker without choosing.
+      setOpen(null);
+      setFiles([]);
+      loadSaveFolder();
+    });
 
   const create = () =>
     run('create', async () => {
@@ -114,13 +124,15 @@ export default function ProjectsScreen() {
       }
     });
 
+  // Copies the file to the cache first, because the share sheet cannot take a SAF address.
   const shareOne = (file) =>
-    run('share', () =>
-      shareFile(projectFileUri(open, file.name), {
+    run('share', async () => {
+      const uri = await copyFileForShare(open, file.name);
+      await shareFile(uri, {
         mimeType: mimeFor(file.name),
         dialogTitle: 'Share file',
-      })
-    );
+      });
+    });
 
   const askDeleteFile = (file) =>
     Alert.alert('Delete file?', `"${file.name}" is removed from this project. This cannot be undone.`, [
@@ -152,6 +164,10 @@ export default function ProjectsScreen() {
       },
     ]);
 
+  const ready = root.state === 'ready';
+  const folderLabel = root.name ? `"${root.name}"` : 'the save folder';
+  const iosNote = Platform.OS === 'ios' ? 'On iPhone, the app may ask you to choose the folder again after it restarts.' : null;
+
   return (
     <View style={styles.screen}>
       <ScreenHeader title={open ?? 'Projects'} />
@@ -160,10 +176,51 @@ export default function ProjectsScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.hint}>Files stay in this app. Share a file to save it elsewhere.</Text>
-
-        {open === null ? (
+        {root.state === 'none' ? (
           <>
+            <Text style={styles.hint}>
+              Choose a save folder. Each project becomes a folder inside it, so you can see the files in the Files app.
+            </Text>
+            {iosNote ? <Text style={styles.hint}>{iosNote}</Text> : null}
+            <Button
+              label="Choose save folder"
+              icon="folder-open-outline"
+              variant="solid"
+              onPress={chooseFolder}
+              loading={busy === 'choose'}
+              disabled={busy !== null}
+            />
+          </>
+        ) : null}
+
+        {root.state === 'lost' ? (
+          <>
+            <Text style={styles.hint}>
+              NumScan can no longer open {folderLabel}. Choose the save folder again.
+            </Text>
+            {iosNote ? <Text style={styles.hint}>{iosNote}</Text> : null}
+            <Button
+              label="Choose save folder"
+              icon="folder-open-outline"
+              variant="solid"
+              onPress={chooseFolder}
+              loading={busy === 'choose'}
+              disabled={busy !== null}
+            />
+          </>
+        ) : null}
+
+        {ready && open === null ? (
+          <>
+            <Text style={styles.hint}>Saved in {folderLabel}. Open the Files app to see them there.</Text>
+            <Button
+              label="Change folder"
+              icon="swap-horizontal-outline"
+              variant="ghost"
+              onPress={chooseFolder}
+              loading={busy === 'choose'}
+              disabled={busy !== null}
+            />
             <TextInput
               value={name}
               onChangeText={setName}
@@ -203,7 +260,9 @@ export default function ProjectsScreen() {
               </Pressable>
             ))}
           </>
-        ) : (
+        ) : null}
+
+        {ready && open !== null ? (
           <>
             <Button label="All projects" icon="arrow-back-outline" variant="ghost" onPress={closeProject} disabled={busy !== null} />
             <Button
@@ -238,7 +297,7 @@ export default function ProjectsScreen() {
               disabled={busy !== null}
             />
           </>
-        )}
+        ) : null}
 
         {message ? <Text style={styles.message}>{message}</Text> : null}
       </ScrollView>
