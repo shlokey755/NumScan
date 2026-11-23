@@ -1,4 +1,3 @@
-import TextRecognition from '@react-native-ml-kit/text-recognition';
 import { useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,7 +10,7 @@ import useCopyToast from '../components/useCopyToast';
 import { colors } from '../theme';
 import { successHaptic } from '../lib/feedback';
 import { rememberScan } from '../lib/history';
-import { pickImages, prepareForReading, readCodes, rotateImage } from '../lib/media';
+import { pickImages, prepareForReading, readCodes, readText, readTurned, rotateImage } from '../lib/media';
 import { extractDigitGroups } from '../lib/text';
 
 const MODES = [
@@ -21,6 +20,20 @@ const MODES = [
 ];
 
 const MODE_LABEL = { codes: 'Codes', text: 'Text', numbers: 'Numbers' };
+
+const EMPTY_MESSAGE = {
+  codes: 'No codes found in this photo. Try a closer, sharper photo.',
+  text: 'No text found in this photo. Try better light or focus.',
+  numbers: 'No numbers found in this photo. Try better light or focus.',
+};
+
+// Finds codes, text or numbers in one copy of the photo. Returns the found items.
+async function readItems(mode, uri) {
+  if (mode === 'codes') return readCodes(uri);
+  const found = await readText(uri);
+  if (!found) return [];
+  return mode === 'numbers' ? extractDigitGroups(found) : [found];
+}
 
 // Reads codes, text or numbers from a photo in the library. Works offline.
 export default function FromPhotoScreen() {
@@ -69,37 +82,24 @@ export default function FromPhotoScreen() {
     setMessage(null);
     setResult(null);
     try {
-      // The photo is sized for reading first (large ones shrink, small ones grow).
+      // The photo is sized for reading first (large ones shrink, small ones grow). That
+      // step also applies the EXIF orientation, so the pixels read below are upright.
       const prepared = await prepareForReading(photo.uri, photo.width);
-      let text;
-      if (mode === 'codes') {
-        const codes = await readCodes(prepared.uri);
-        if (codes.length === 0) {
-          setMessage('No codes found in this photo. Try a closer, sharper photo.');
-          return;
-        }
-        text = codes.join('\n');
-      } else {
-        const ocr = await TextRecognition.recognize(prepared.uri);
-        const found = (ocr?.text ?? '').trim();
-        if (!found) {
-          setMessage('No text found in this photo. Try better light or focus.');
-          return;
-        }
-        if (mode === 'numbers') {
-          const groups = extractDigitGroups(found);
-          if (groups.length === 0) {
-            setMessage('No numbers found in this photo.');
-            return;
-          }
-          text = groups.join('');
-        } else {
-          text = found;
-        }
+      // If the photo as picked finds nothing, read turned copies before giving up.
+      const { items, turn } = await readTurned(prepared.uri, {
+        read: (uri) => readItems(mode, uri),
+        turnCopy: async (uri, degrees) => (await rotateImage(uri, degrees)).uri,
+      });
+      if (items.length === 0) {
+        setMessage(EMPTY_MESSAGE[mode]);
+        return;
       }
+      // Numbers are joined with no separator, as in the live Numbers scanner. Codes and text keep one item per line.
+      const text = mode === 'numbers' ? items.join('') : items.join('\n');
 
       const label = MODE_LABEL[mode];
       setResult({ id: Date.now(), label, text });
+      if (turn) setMessage(`Read after turning the photo ${turn}°.`);
       successHaptic();
       copy(text, 'Copied to clipboard');
       rememberScan(`Photo · ${label}`, text);
