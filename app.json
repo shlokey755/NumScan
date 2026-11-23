@@ -49,6 +49,15 @@
           "photosPermission": "NumScan reads the photos you choose to scan, convert or make into PDFs."
         }
       ]
-    ]
+    ],
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/47c7b09c-9764-4bc7-a4ee-0208d77c83dd",
+      "enabled": true,
+      "checkAutomatically": "NEVER",
+      "fallbackToCacheTimeout": 0
+    }
   }
 }
