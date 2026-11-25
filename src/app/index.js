@@ -80,8 +80,26 @@ export default function HomeScreen() {
         </Animated.View>
       </View>
 
-      
-    </View>
+      <View style={styles.map}>
+        {plan.length === 0 ? (
+          <Text style={styles.empty}>No tool matches "{query.trim()}".</Text>
+        ) : (
+          plan.map(({ head, first }) => (
+            <HeadSection
+              key={head.number}
+              head={head}
+              open={searching || !folded[head.number]}
+              onToggle={() => toggleHead(head.number)}
+              firstDelay={first}
+            />
+          ))
+        )}
+      </View>
+
+      <UpdateButton />
+
+      <Text style={styles.footer}>Everything runs on your phone. Nothing is uploaded.</Text>
+    </ScrollView>
   );
 }
 
