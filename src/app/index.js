@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Cursor, HeadSection, Ticker } from '../components/LinkMap';
+import UpdateButton from '../components/UpdateButton';
 import { colors } from '../theme';
 import { HEADS, TOOLS, groupTools, searchTools } from '../lib/tools';
 
@@ -79,8 +80,26 @@ export default function HomeScreen() {
         </Animated.View>
       </View>
 
-      
-    </View>
+      <View style={styles.map}>
+        {plan.length === 0 ? (
+          <Text style={styles.empty}>No tool matches "{query.trim()}".</Text>
+        ) : (
+          plan.map(({ head, first }) => (
+            <HeadSection
+              key={head.number}
+              head={head}
+              open={searching || !folded[head.number]}
+              onToggle={() => toggleHead(head.number)}
+              firstDelay={first}
+            />
+          ))
+        )}
+      </View>
+
+      <UpdateButton />
+
+      <Text style={styles.footer}>Everything runs on your phone. Nothing is uploaded.</Text>
+    </ScrollView>
   );
 }
 
