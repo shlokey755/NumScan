@@ -8,8 +8,9 @@ export const HEADS = [
   { number: '01', title: 'Scan', hint: 'Codes, text and numbers' },
   { number: '02', title: 'PDF', hint: 'Edit, stamp, merge and convert' },
   { number: '03', title: 'Pictures and video', hint: 'Photos, clean-up and video' },
-  { number: '04', title: 'Data and lab', hint: 'Calculators, tables and code' },
-  { number: '05', title: 'Files', hint: 'Projects, zips and history' },
+  { number: '04', title: 'Calculators', hint: 'Lab, scientific, grades, dates and bases' },
+  { number: '05', title: 'Writing and code', hint: 'Word count, patterns, tables and logic' },
+  { number: '06', title: 'Files', hint: 'Projects, zips and history' },
 ];
 
 export const TOOLS = [
@@ -127,6 +128,54 @@ export const TOOLS = [
   },
   {
     head: '04',
+    href: '/scientific-calc',
+    icon: 'calculator-outline',
+    title: 'Scientific calculator',
+    detail: 'Trig, logs, powers and roots. Degrees or radians.',
+    keywords: ['calculator', 'scientific', 'maths', 'math', 'sin', 'cos', 'tan', 'arcsin', 'log', 'ln', 'sqrt', 'power', 'factorial', 'pi', 'copy', 'degrees', 'radians'],
+  },
+  {
+    head: '04',
+    href: '/grades',
+    icon: 'school-outline',
+    title: 'Grades and GPA',
+    detail: 'Weighted average, the mark you need, and GPA.',
+    keywords: ['grade', 'grades', 'gpa', 'average', 'weighted', 'mark', 'marks', 'score', 'needed', 'target', 'credits', 'course', 'exam', 'points'],
+  },
+  {
+    head: '04',
+    href: '/date-calc',
+    icon: 'calendar-outline',
+    title: 'Date calculator',
+    detail: 'Days between two dates, or a date plus some days.',
+    keywords: ['date', 'dates', 'days', 'deadline', 'due', 'calendar', 'working days', 'weekdays', 'between', 'add', 'countdown', 'duration', 'today'],
+  },
+  {
+    head: '04',
+    href: '/number-bases',
+    icon: 'hardware-chip-outline',
+    title: 'Number bases',
+    detail: 'Binary, octal, decimal and hex, with bit operations.',
+    keywords: ['binary', 'hex', 'hexadecimal', 'octal', 'decimal', 'base', 'bits', 'twos complement', 'bitwise', 'convert', 'computing', 'computer'],
+  },
+  {
+    head: '05',
+    href: '/word-count',
+    icon: 'reader-outline',
+    title: 'Word counter',
+    detail: 'Words, characters, sentences and a word target.',
+    keywords: ['word', 'words', 'count', 'characters', 'letters', 'essay', 'limit', 'target', 'reading time', 'sentences', 'paragraphs', 'length', 'text', 'file'],
+  },
+  {
+    head: '05',
+    href: '/regex',
+    icon: 'search-outline',
+    title: 'Regex tester',
+    detail: 'Test a pattern and see every match.',
+    keywords: ['regex', 'regexp', 'regular expression', 'pattern', 'match', 'find', 'search', 'group', 'capture', 'code', 'text'],
+  },
+  {
+    head: '05',
     href: '/table',
     icon: 'grid-outline',
     title: 'Table to CSV or Excel',
@@ -134,7 +183,7 @@ export const TOOLS = [
     keywords: ['table', 'csv', 'excel', 'xlsx', 'spreadsheet', 'sheet', 'readings', 'paste', 'data', 'grid', 'export'],
   },
   {
-    head: '04',
+    head: '05',
     href: '/text-viewer',
     icon: 'code-slash-outline',
     title: 'Text and code viewer',
@@ -143,6 +192,14 @@ export const TOOLS = [
   },
   {
     head: '05',
+    href: '/truth-table',
+    icon: 'git-branch-outline',
+    title: 'Truth table',
+    detail: 'Work out a logic expression for every input.',
+    keywords: ['logic', 'truth', 'table', 'boolean', 'and', 'or', 'not', 'xor', 'gate', 'circuit', 'digital', 'bit', 'expression'],
+  },
+  {
+    head: '06',
     href: '/projects',
     icon: 'folder-outline',
     title: 'Projects',
@@ -150,7 +207,7 @@ export const TOOLS = [
     keywords: ['project', 'folder', 'folders', 'subject', 'experiment', 'group', 'organise', 'organize', 'files', 'storage'],
   },
   {
-    head: '05',
+    head: '06',
     href: '/zip-files',
     icon: 'archive-outline',
     title: 'Rename and zip',
@@ -158,7 +215,7 @@ export const TOOLS = [
     keywords: ['zip', 'rename', 'archive', 'batch', 'bundle', 'files', 'name', 'template', 'package'],
   },
   {
-    head: '05',
+    head: '06',
     href: '/history',
     icon: 'time-outline',
     title: 'History',
