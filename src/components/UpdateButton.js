@@ -10,7 +10,7 @@ const MESSAGES = {
   disabled: 'Updates are off in this build. Install a release build to get them.',
 };
 
-// The only place the app asks the server for a JavaScript update. A tap starts it.
+// Asks the server for a JavaScript update on demand. The app also checks once on launch.
 export default function UpdateButton() {
   const [status, setStatus] = useState('idle'); // idle | checking | current | ready | disabled | error
   const [message, setMessage] = useState(null);
