@@ -7,6 +7,9 @@ import UpdateButton from '../components/UpdateButton';
 import { colors } from '../theme';
 import { HEADS, TOOLS, groupTools, searchTools } from '../lib/tools';
 
+// React Native's Animated API has no TextInput, so wrap the real one for animated styles.
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+
 // The home screen: a link map of the tools. Each head groups closely related tools,
 // and tapping a head folds it away. Search shows only the matching tools, under their heads.
 export default function HomeScreen() {
@@ -59,7 +62,7 @@ export default function HomeScreen() {
       <View style={styles.searchWrap}>
         <Animated.View style={[styles.search, { backgroundColor: boxColor }]}>
           <Ionicons name="search" size={22} color={focused ? colors.inverse : colors.text} />
-          <Animated.TextInput
+          <AnimatedTextInput
             value={query}
             onChangeText={setQuery}
             onFocus={() => setFocused(true)}
